@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setCurrentPage } from '../utils/appSlice';
+import { addNotification } from '../utils/appSlice';
 import HomeHeader from '../Component/HomeHeader';
 
 function Feedback() {
     const [showPopup, setShowPopup] = useState(false);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(setCurrentPage('feedback'));
+    }, [dispatch]);
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -29,8 +37,18 @@ function Feedback() {
             if (res.ok) {
                 setShowPopup(true);
                 form.reset();
+                dispatch(addNotification({
+                    id: Date.now(),
+                    type: 'success',
+                    message: 'Feedback submitted successfully!'
+                }));
                 setTimeout(() => setShowPopup(false), 3000);
             } else {
+                dispatch(addNotification({
+                    id: Date.now(),
+                    type: 'error',
+                    message: data.message || "Failed to send feedback."
+                }));
                 alert(data.message || "Failed to send feedback.");
             }
         } catch (err) {

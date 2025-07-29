@@ -1,26 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { SetShowPassword } from '../utils/userSlice';
+import { 
+    SetShowPassword, 
+    updateLoginForm, 
+    setToken, 
+    setAuthenticated,
+    setUser,
+    resetLoginForm 
+} from '../utils/userSlice';
 import { hideLoginButton } from '../utils/headerSlice';
+import { setCurrentPage } from '../utils/appSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../Component/Header.jsx';
 
 function Login() {
-    const showPass = useSelector(store => store.user.showpassword);
+    const { showpassword, loginForm } = useSelector(store => store.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
         dispatch(hideLoginButton());
+        dispatch(setCurrentPage('login'));
     }, [dispatch]);
 
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
-
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        dispatch(updateLoginForm({ [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = async (e) => {
@@ -31,14 +35,22 @@ function Login() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(loginForm),
             });
 
             const data = await res.json();
             if (res.ok) {
                 alert('Login successful');
-                localStorage.setItem('token', data.token); // save token for authentication
-                navigate('/home'); // or redirect to dashboard
+                dispatch(setToken(data.token));
+                dispatch(setAuthenticated(true));
+                // Set user data if available, otherwise create a basic user object
+                const userData = data.user || { email: loginForm.email };
+                dispatch(setUser(userData));
+                dispatch(resetLoginForm());
+                // Add a small delay to ensure Redux state is updated
+                setTimeout(() => {
+                    navigate('/home');
+                }, 100);
             } else {
                 alert(data.message || 'Login failed');
             }
@@ -85,7 +97,7 @@ function Login() {
                             <input
                                 type="email"
                                 name="email"
-                                value={formData.email}
+                                value={loginForm.email}
                                 onChange={handleChange}
                                 placeholder="Email ID"
                                 className="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full"
@@ -100,9 +112,9 @@ function Login() {
                             </svg>
 
                             <input
-                                type={showPass ? 'text' : 'password'}
+                                type={showpassword ? 'text' : 'password'}
                                 name="password"
-                                value={formData.password}
+                                value={loginForm.password}
                                 onChange={handleChange}
                                 placeholder="Password"
                                 className="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full"
@@ -114,7 +126,7 @@ function Login() {
                                 onClick={toggleShowPassword}
                                 className="absolute right-4 text-xl text-gray-500 hover:text-pink-600 focus:outline-none cursor-pointer transition-colors"
                             >
-                                {showPass ? '🙈' : '👁️'}
+                                {showpassword ? '🙈' : '👁️'}
                             </button>
                         </div>
 

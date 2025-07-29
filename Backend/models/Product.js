@@ -8,13 +8,14 @@ const productSchema = new mongoose.Schema({
   price: Number,
   negotiable: Boolean,
   images: [String],
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now,
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // This links product to the user
   },
 });
 

@@ -1,70 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateProductForm, resetProductForm, setUploadLoading, setUploadError, addMyProduct } from '../utils/productSlice';
+import { setCurrentPage } from '../utils/appSlice';
+import { useAuth } from '../utils/authUtils';
 import HomeHeader from '../Component/HomeHeader';
 
 function ListProductForm() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [condition, setCondition] = useState('');
-  const [price, setPrice] = useState('');
-  const [negotiable, setNegotiable] = useState(false);
-  const [images, setImages] = useState([]);
+  const dispatch = useDispatch();
+  const { productForm, uploadLoading, uploadError } = useSelector(store => store.product);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    dispatch(setCurrentPage('sell'));
+  }, [dispatch]);
 
   const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files));
+    dispatch(updateProductForm({ images: Array.from(e.target.files) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (images.length === 0) {
+    if (productForm.images.length === 0) {
       alert('Please select at least one image.');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('category', category);
-    formData.append('condition', condition);
-    formData.append('price', price);
-    formData.append('negotiable', negotiable);
+    dispatch(setUploadLoading(true));
+    dispatch(setUploadError(null));
 
-    images.forEach((img) => {
+    const formData = new FormData();
+    formData.append('title', productForm.title);
+    formData.append('description', productForm.description);
+    formData.append('category', productForm.category);
+    formData.append('condition', productForm.condition);
+    formData.append('price', productForm.price);
+    formData.append('negotiable', productForm.negotiable);
+
+    productForm.images.forEach((img) => {
       formData.append('images', img);
     });
 
     try {
-      const token = localStorage.getItem('token'); // ✅ Get token
-
       const res = await fetch('http://localhost:5000/api/product/upload', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ Send token
+          Authorization: `Bearer ${token}`,
         },
-        body: formData, // ✅ Let browser set the correct multipart/form-data boundary
+        body: formData,
       });
 
       const data = await res.json();
 
       if (res.ok) {
         alert('✅ Product uploaded successfully!');
-        console.log(data);
-
-        // Reset form
-        setTitle('');
-        setDescription('');
-        setCategory('');
-        setCondition('');
-        setPrice('');
-        setNegotiable(false);
-        setImages([]);
+        dispatch(addMyProduct(data.product));
+        dispatch(resetProductForm());
       } else {
+        dispatch(setUploadError(data.message || 'Something went wrong.'));
         alert(data.message || 'Something went wrong.');
       }
     } catch (err) {
       console.error(err);
+      dispatch(setUploadError('Error submitting form.'));
       alert('Error submitting form.');
+    } finally {
+      dispatch(setUploadLoading(false));
     }
   };
 
@@ -79,17 +80,39 @@ function ListProductForm() {
 
         <div>
           <label className="font-medium" htmlFor="title">Product Title</label>
-          <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter product title" required className="w-full border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" />
+          <input 
+            id="title" 
+            type="text" 
+            value={productForm.title} 
+            onChange={(e) => dispatch(updateProductForm({ title: e.target.value }))} 
+            placeholder="Enter product title" 
+            required 
+            className="w-full border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" 
+          />
         </div>
 
         <div>
           <label className="font-medium" htmlFor="description">Description</label>
-          <textarea id="description" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your product" required className="w-full resize-none border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" />
+          <textarea 
+            id="description" 
+            rows={4} 
+            value={productForm.description} 
+            onChange={(e) => dispatch(updateProductForm({ description: e.target.value }))} 
+            placeholder="Describe your product" 
+            required 
+            className="w-full resize-none border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" 
+          />
         </div>
 
         <div>
           <label className="font-medium" htmlFor="category">Category</label>
-          <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} required className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3">
+          <select 
+            id="category" 
+            value={productForm.category} 
+            onChange={(e) => dispatch(updateProductForm({ category: e.target.value }))} 
+            required 
+            className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3"
+          >
             <option value="">Select category</option>
             <option value="electronics">Electronics</option>
             <option value="furniture">Furniture</option>
@@ -102,7 +125,13 @@ function ListProductForm() {
 
         <div>
           <label className="font-medium" htmlFor="condition">Condition</label>
-          <select id="condition" value={condition} onChange={(e) => setCondition(e.target.value)} required className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3">
+          <select 
+            id="condition" 
+            value={productForm.condition} 
+            onChange={(e) => dispatch(updateProductForm({ condition: e.target.value }))} 
+            required 
+            className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3"
+          >
             <option value="">Select condition</option>
             <option value="new">New</option>
             <option value="like-new">Like New</option>
@@ -113,11 +142,25 @@ function ListProductForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="font-medium" htmlFor="price">Price (₹)</label>
-            <input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Enter price" required className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3" />
+            <input 
+              id="price" 
+              type="number" 
+              value={productForm.price} 
+              onChange={(e) => dispatch(updateProductForm({ price: e.target.value }))} 
+              placeholder="Enter price" 
+              required 
+              className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3" 
+            />
           </div>
 
           <div className="flex items-center mt-7">
-            <input id="negotiable" type="checkbox" checked={negotiable} onChange={(e) => setNegotiable(e.target.checked)} className="mr-2" />
+            <input 
+              id="negotiable" 
+              type="checkbox" 
+              checked={productForm.negotiable} 
+              onChange={(e) => dispatch(updateProductForm({ negotiable: e.target.checked }))} 
+              className="mr-2" 
+            />
             <label htmlFor="negotiable">Price Negotiable</label>
           </div>
         </div>
@@ -136,9 +179,21 @@ function ListProductForm() {
         </div>
         <p className="text-xs text-gray-500 mt-1">Upload up to 5 images (JPG/PNG)</p>
 
-        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded mt-4">
-          Post Product
+        <button 
+          type="submit" 
+          disabled={uploadLoading}
+          className={`w-full font-medium py-2.5 rounded mt-4 ${
+            uploadLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          }`}
+        >
+          {uploadLoading ? 'Uploading...' : 'Post Product'}
         </button>
+        
+        {uploadError && (
+          <p className="text-red-500 text-sm mt-2">{uploadError}</p>
+        )}
       </form>
     </div>
   );

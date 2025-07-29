@@ -9,7 +9,7 @@ const HeroSection = () => {
 
     >
       <main className="flex-grow flex flex-col items-center px-6 sm:px-10 max-w-7xl mx-auto w-full">
-   
+
 
         <h1 className="mt-12 text-center text-gray-900 font-semibold text-3xl sm:text-4xl md:text-5xl max-w-2xl leading-tight">
           Online retail and smart selling. <span className="text-indigo-600">The smart way to buy, sell, and grow.</span>
@@ -27,7 +27,7 @@ const HeroSection = () => {
             </svg>
           </button>
         </Link>
-       
+
 
         {/* Images */}
         <div

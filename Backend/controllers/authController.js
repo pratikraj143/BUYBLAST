@@ -6,12 +6,15 @@ const bcrypt = require("bcryptjs");
 
 // 📧 Email transporter
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // SSL
   auth: {
     user: process.env.SMTP_EMAIL,
     pass: process.env.SMTP_PASS,
   },
 });
+
 
 // ✅ Send OTP
 exports.sendOtp = async (req, res) => {

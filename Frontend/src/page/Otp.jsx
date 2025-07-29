@@ -1,17 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateOtp, resetOtpData, resetRegisterForm } from '../utils/userSlice';
+import { setCurrentPage } from '../utils/appSlice';
 import { useNavigate } from 'react-router-dom';
 
 function Otp() {
     const inputRefs = useRef([]);
     const navigate = useNavigate();
-    const [otp, setOtp] = useState(Array(6).fill(""));
+    const dispatch = useDispatch();
+    const { otpData } = useSelector(store => store.user);
+
+    React.useEffect(() => {
+        dispatch(setCurrentPage('otp'));
+    }, [dispatch]);
 
     const handleChange = (e, index) => {
         const value = e.target.value;
         if (/^[0-9]?$/.test(value)) {
-            const newOtp = [...otp];
+            const newOtp = [...otpData.otp];
             newOtp[index] = value;
-            setOtp(newOtp);
+            dispatch(updateOtp(newOtp));
 
             if (value && index < 5) {
                 inputRefs.current[index + 1].focus();
@@ -20,7 +28,7 @@ function Otp() {
     };
 
     const handleKeyDown = (e, index) => {
-        if (e.key === "Backspace" && !otp[index] && index > 0) {
+        if (e.key === "Backspace" && !otpData.otp[index] && index > 0) {
             inputRefs.current[index - 1].focus();
         }
     };
@@ -29,7 +37,7 @@ function Otp() {
         const pasted = e.clipboardData.getData("text").slice(0, 6);
         if (/^\d{6}$/.test(pasted)) {
             const otpArray = pasted.split("");
-            setOtp(otpArray);
+            dispatch(updateOtp(otpArray));
             otpArray.forEach((char, i) => {
                 if (inputRefs.current[i]) {
                     inputRefs.current[i].value = char;
@@ -40,9 +48,8 @@ function Otp() {
     };
 
     const handleVerify = async () => {
-        const fullOtp = otp.join("").trim();
-        const email = localStorage.getItem("tempEmail");
-        const password = localStorage.getItem("tempPassword");
+        const fullOtp = otpData.otp.join("").trim();
+        const { email, password } = otpData;
 
         if (fullOtp.length !== 6) {
             alert("Please enter a 6-digit OTP");
@@ -63,8 +70,8 @@ function Otp() {
             const data = await res.json();
             if (res.ok) {
                 alert("✅ Registration successful! Please login.");
-                localStorage.removeItem("tempEmail");
-                localStorage.removeItem("tempPassword");
+                dispatch(resetOtpData());
+                dispatch(resetRegisterForm());
                 navigate("/login");
             } else {
                 alert(data.message || "❌ OTP verification failed");
@@ -84,7 +91,7 @@ function Otp() {
                 </p>
 
                 <div className="grid grid-cols-6 gap-2 sm:gap-3 w-11/12 mt-8">
-                    {otp.map((value, index) => (
+                    {otpData.otp.map((value, index) => (
                         <input
                             key={index}
                             type="text"

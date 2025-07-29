@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setProfile, updateProfileImage } from '../utils/userSlice';
+import { setCurrentPage } from '../utils/appSlice';
 import HomeHeader from '../Component/HomeHeader.jsx';
 
 const UserProfile = () => {
-    const [profileImage, setProfileImage] = useState(null);
+    const dispatch = useDispatch();
+    const { profile } = useSelector(store => store.user);
+
+    useEffect(() => {
+        dispatch(setCurrentPage('profile'));
+    }, [dispatch]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setProfileImage(URL.createObjectURL(file));
+            const imageUrl = URL.createObjectURL(file);
+            dispatch(updateProfileImage(imageUrl));
         }
     };
 
@@ -22,7 +31,7 @@ const UserProfile = () => {
                         <div className="w-48 h-48 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-1 hover:scale-105 transition-transform duration-300 shadow-xl">
                             <img
                                 src={
-                                    profileImage ||
+                                    profile.profileImage ||
                                     "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                                 }
                                 alt="Profile"
@@ -48,7 +57,8 @@ const UserProfile = () => {
                             <label className="block text-gray-700 font-medium mb-1">Full Name</label>
                             <input
                                 type="text"
-                                value="prakart"
+                                value={profile.name || ''}
+                                onChange={(e) => dispatch(setProfile({ name: e.target.value }))}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none bg-white shadow-sm"
                             />
                         </div>
@@ -56,7 +66,8 @@ const UserProfile = () => {
                             <label className="block text-gray-700 font-medium mb-1">Email</label>
                             <input
                                 type="email"
-                                value="email@gmail.com"
+                                value={profile.email || ''}
+                                onChange={(e) => dispatch(setProfile({ email: e.target.value }))}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none bg-white shadow-sm"
                             />
                         </div>
@@ -64,7 +75,8 @@ const UserProfile = () => {
                             <label className="block text-gray-700 font-medium mb-1">Branch</label>
                             <input
                                 type="text"
-                                value="mtech"
+                                value={profile.branch || ''}
+                                onChange={(e) => dispatch(setProfile({ branch: e.target.value }))}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none bg-white shadow-sm"
                             />
                         </div>
@@ -72,7 +84,8 @@ const UserProfile = () => {
                             <label className="block text-gray-700 font-medium mb-1">WhatsApp No</label>
                             <input
                                 type="text"
-                                value="xxxxxxxx"
+                                value={profile.whatsapp || ''}
+                                onChange={(e) => dispatch(setProfile({ whatsapp: e.target.value }))}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none bg-white shadow-sm"
                             />
                         </div>

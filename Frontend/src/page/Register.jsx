@@ -1,40 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Mail, Lock, User, Phone, Hash } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { SetShowPassword } from '../utils/userSlice';
+import { 
+    SetShowPassword, 
+    updateRegisterForm, 
+    setOtpData, 
+    resetRegisterForm 
+} from '../utils/userSlice';
 import { hideSignupButton } from '../utils/headerSlice';
+import { setCurrentPage } from '../utils/appSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../Component/Header.jsx';
 
 function Register() {
-    const showPass = useSelector(store => store.user.showpassword);
+    const { showpassword, registerForm } = useSelector(store => store.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
         dispatch(hideSignupButton());
+        dispatch(setCurrentPage('register'));
     }, [dispatch]);
 
     const toggleShowPassword = () => {
         dispatch(SetShowPassword());
     };
 
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        branch: '',
-        whatsapp: ''
-    });
-
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        dispatch(updateRegisterForm({ [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
+        if (registerForm.password !== registerForm.confirmPassword) {
             alert("Passwords do not match");
             return;
         }
@@ -46,16 +44,18 @@ function Register() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email: formData.email,
-                    name: formData.name,
-                    password: formData.password
+                    email: registerForm.email,
+                    name: registerForm.name,
+                    password: registerForm.password
                 })
             });
 
             const data = await res.json();
             if (res.ok) {
-                localStorage.setItem("tempEmail", formData.email); // for OTP verification
-                localStorage.setItem("tempPassword", formData.password);
+                dispatch(setOtpData({ 
+                    email: registerForm.email, 
+                    password: registerForm.password 
+                }));
                 navigate("/otp");
             } else {
                 alert(data.message || "Failed to send OTP");
@@ -86,7 +86,7 @@ function Register() {
                         <FormInput
                             label="Full Name"
                             name="name"
-                            value={formData.name}
+                            value={registerForm.name}
                             onChange={handleChange}
                             Icon={User}
                             placeholder="Enter your full name"
@@ -97,7 +97,7 @@ function Register() {
                         <FormInput
                             label="Email Address"
                             name="email"
-                            value={formData.email}
+                            value={registerForm.email}
                             onChange={handleChange}
                             Icon={Mail}
                             placeholder="Enter your NIT email address"
@@ -108,35 +108,35 @@ function Register() {
                         <FormInput
                             label="Password"
                             name="password"
-                            value={formData.password}
+                            value={registerForm.password}
                             onChange={handleChange}
                             Icon={Lock}
                             placeholder="Enter your password"
-                            type={showPass ? "text" : "password"}
+                            type={showpassword ? "text" : "password"}
                             required
                             showToggle
                             onToggle={toggleShowPassword}
-                            showPass={showPass}
+                            showPass={showpassword}
                         />
 
                         <FormInput
                             label="Confirm Password"
                             name="confirmPassword"
-                            value={formData.confirmPassword}
+                            value={registerForm.confirmPassword}
                             onChange={handleChange}
                             Icon={Lock}
                             placeholder="Confirm password"
-                            type={showPass ? "text" : "password"}
+                            type={showpassword ? "text" : "password"}
                             required
                             showToggle
                             onToggle={toggleShowPassword}
-                            showPass={showPass}
+                            showPass={showpassword}
                         />
 
                         <FormInput
                             label="Branch"
                             name="branch"
-                            value={formData.branch}
+                            value={registerForm.branch}
                             onChange={handleChange}
                             Icon={Hash}
                             placeholder="Enter your Branch"
@@ -147,7 +147,7 @@ function Register() {
                         <FormInput
                             label="WhatsApp No"
                             name="whatsapp"
-                            value={formData.whatsapp}
+                            value={registerForm.whatsapp}
                             onChange={handleChange}
                             Icon={Phone}
                             placeholder="Enter your Number"

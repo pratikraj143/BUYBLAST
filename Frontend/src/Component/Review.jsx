@@ -50,7 +50,7 @@ export default function Review() {
       <p className="bg-gradient-to-r from-white to-[#CAABFF] text-transparent bg-clip-text text-lg">
         Your next favourite tool is just one click away.
       </p>
-      <Link to="register">
+      <Link to="signup">
       <button className="cursor-pointer px-12 py-2.5 text-white border border-purple-600 bg-purple-700/60 hover:bg-purple-800 transition-all rounded-full text-sm mt-4">
         Get Started
       </button></Link>
