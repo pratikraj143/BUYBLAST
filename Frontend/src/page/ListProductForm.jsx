@@ -51,23 +51,26 @@ function ListProductForm() {
       });
 
       const data = await res.json();
+      console.log("Upload Response:", data); // 👈 log the actual message
 
       if (res.ok) {
         alert('✅ Product uploaded successfully!');
         dispatch(addMyProduct(data.product));
         dispatch(resetProductForm());
       } else {
-        dispatch(setUploadError(data.message || 'Something went wrong.'));
-        alert(data.message || 'Something went wrong.');
+        dispatch(setUploadError(data.error || data.message || 'Something went wrong.'));
+        alert(data.error || data.message || 'Something went wrong.');
       }
+
     } catch (err) {
-      console.error(err);
+      console.error("Catch error:", err);
       dispatch(setUploadError('Error submitting form.'));
       alert('Error submitting form.');
     } finally {
       dispatch(setUploadLoading(false));
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-hidden">

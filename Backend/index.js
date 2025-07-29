@@ -9,6 +9,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -16,33 +17,40 @@ const io = new Server(server, {
   },
 });
 
-app.set("io", io);
 app.use(cors());
-app.use(express.json({ limit: "10mb" })); // allow base64 image data
+app.use(express.json({ limit: "10mb" }));
 
 connectDB();
 
+// Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
 app.use("/api/product", require("./routes/productRoutes"));
 
+// Root API test
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// In-memory messages store (use DB in future)
-let messages = [];
+// 🔁 In-memory message store
+let messages = []; // { id, text, replyTo }
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Send existing messages to new user
+  // Send old messages in chronological order (old to new)
   socket.emit("init_messages", messages);
 
-  // On new message
+  // 📥 Handle new message
   socket.on("send_message", (msg) => {
-    messages.push(msg);
-    io.emit("receive_message", msg);
+    const newMsg = {
+      id: Date.now(), // unique id
+      text: msg.text, // message text
+      replyTo: msg.replyTo || null, // optional reply id
+    };
+
+    messages.push(newMsg); // Add to memory
+    io.emit("receive_message", newMsg); // Send to all clients
   });
 
   socket.on("disconnect", () => {
@@ -51,4 +59,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

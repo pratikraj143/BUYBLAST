@@ -8,6 +8,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// @route   GET /api/product/all
 router.get("/all", async (req, res) => {
   console.log("GET /api/product/all hit");
   try {
@@ -19,14 +20,30 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// @route   POST /api/product/upload
 router.post(
   "/upload",
   authMiddleware,
   upload.array("images", 5),
   async (req, res) => {
     try {
+      console.log("➡️ Upload route hit");
+
       const { title, description, category, condition, price, negotiable } =
         req.body;
+      console.log("📦 Body Data:", req.body);
+      console.log("🖼️ Files Uploaded:", req.files?.length || 0);
+
+      // Field validation
+      if (!title || !description || !category || !condition || !price) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "At least one image is required" });
+      }
 
       if (!req.user) {
         return res.status(401).json({ error: "User not authenticated" });
@@ -41,6 +58,7 @@ router.post(
           folder: "buyandsell_products",
         });
 
+        console.log("✅ Image uploaded:", result.secure_url);
         uploadedImages.push(result.secure_url);
       }
 
@@ -56,17 +74,21 @@ router.post(
       });
 
       await newProduct.save();
+      console.log("📦 Product saved to DB");
 
-      // 🔴 Emit the product in real-time
+      // Emit real-time event
       const io = req.app.get("io");
-      io.emit("receive_product", newProduct);
+      if (io) {
+        io.emit("receive_product", newProduct);
+        console.log("📡 Product emitted via Socket.io");
+      }
 
       res.status(201).json({
         message: "Product uploaded successfully",
         product: newProduct,
       });
     } catch (error) {
-      console.error("Upload error:", error.message);
+      console.error("❌ Upload error:", error);
       res.status(500).json({ error: "Product upload failed." });
     }
   }
