@@ -6,7 +6,6 @@ import Home from './page/Home'
 import Login from './page/Login.jsx'
 import Otp from './page/Otp.jsx'
 import Error from './page/Error.jsx'
-import TestRoute from './page/TestRoute.jsx'
 import appstore from './utils/appstore.jsx'
 import { Provider } from 'react-redux'
 import UserProfile from './page/UserProfile.jsx'
@@ -16,6 +15,7 @@ import Footer from './Component/Footer.jsx'
 import ProtectedRoute from './utils/ProtectedRoute.jsx'
 import Notification from './Component/Notification.jsx'
 import AuthInitializer from './utils/AuthInitializer.jsx'
+import Chatpage from './page/Chatpage.jsx'
 
 function App() {
   return (
@@ -52,8 +52,8 @@ const appRouter = createBrowserRouter([
         element: <Login />
       },
       {
-        path: 'test',
-        element: <TestRoute />
+        path: 'chat',
+        element: <Chatpage />
       },
       {
         path: 'feedback',

@@ -1,39 +1,36 @@
-import React, { useEffect, useState, useRef } from "react";
-import io from "socket.io-client";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from 'react';
+import io from 'socket.io-client';
+import axios from 'axios';
 
-const socket = io("http://localhost:5000");
+const socket = io('http://localhost:5000');
 
 const Chatpage = () => {
-  const currentUser = "Ankush"; // 👈 Replace with logged-in user later
-
   const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
+  const [newMsg, setNewMsg] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const bottomRef = useRef();
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/messages")
-      .then((res) => setMessages(res.data))
-      .catch((err) => console.log("Error fetching messages:", err));
+    axios.get('http://localhost:5000/api/messages')
+      .then(res => setMessages(res.data))
+      .catch(err => console.log('Error fetching messages:', err));
 
-    socket.on("receive_message", (msg) => {
-      setMessages((prev) => [...prev, msg]);
+    socket.on('receive_message', (msg) => {
+      setMessages(prev => [...prev, msg]);
     });
 
-    socket.on("delete_message", (id) => {
-      setMessages((prev) => prev.filter((msg) => msg._id !== id));
+    socket.on('delete_message', (id) => {
+      setMessages(prev => prev.filter(msg => msg._id !== id));
     });
 
     return () => {
-      socket.off("receive_message");
-      socket.off("delete_message");
+      socket.off('receive_message');
+      socket.off('delete_message');
     };
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = () => {
@@ -41,33 +38,30 @@ const Chatpage = () => {
 
     const messageData = {
       text: newMsg,
-      sender: currentUser,
+      sender: 'Ankush',
       replyTo: replyingTo?._id || null,
     };
 
-    socket.emit("send_message", messageData);
+    socket.emit('send_message', messageData);
 
-    setNewMsg("");
+    setNewMsg('');
     setReplyingTo(null);
   };
 
   const deleteMessage = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/messages/${id}`, {
-        data: { sender: currentUser }, // ✅ Send current user for ownership check
-      });
+      await axios.delete(`http://localhost:5000/api/messages/${id}`);
     } catch (err) {
-      console.log("Error deleting message:", err);
+      console.log('Error deleting message:', err);
     }
   };
 
-  const canDelete = (timestamp, sender) => {
+  const canDelete = (timestamp) => {
     const oneHour = 60 * 60 * 1000;
-    const isOwner = sender === currentUser;
-    return isOwner && Date.now() - new Date(timestamp).getTime() <= oneHour;
+    return Date.now() - new Date(timestamp).getTime() <= oneHour;
   };
 
-  const getMessageById = (id) => messages.find((msg) => msg._id === id);
+  const getMessageById = (id) => messages.find(msg => msg._id === id);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -78,25 +72,16 @@ const Chatpage = () => {
           {messages.map((msg, index) => {
             const repliedMessage = getMessageById(msg.replyTo);
             return (
-              <div
-                key={msg._id || index}
-                className="mb-4 p-2 bg-white rounded shadow-sm"
-              >
+              <div key={msg._id || index} className="mb-4 p-2 bg-white rounded shadow-sm">
                 {repliedMessage && (
                   <div className="text-sm text-gray-500 border-l-4 border-indigo-500 pl-2 mb-1">
-                    Reply to <strong>{repliedMessage.sender}:</strong>{" "}
-                    {repliedMessage.text}
+                    Reply to <strong>{repliedMessage.sender}:</strong> {repliedMessage.text}
                   </div>
                 )}
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-semibold text-indigo-700">
-                      {msg.sender}:
-                    </span>{" "}
-                    {msg.text}
-                    <div className="text-xs text-gray-400">
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </div>
+                    <span className="font-semibold">{msg.sender}:</span> {msg.text}
+                    <div className="text-xs text-gray-400">{new Date(msg.timestamp).toLocaleTimeString()}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <button
@@ -105,7 +90,7 @@ const Chatpage = () => {
                     >
                       Reply
                     </button>
-                    {canDelete(msg.timestamp, msg.sender) && (
+                    {canDelete(msg.timestamp) && (
                       <button
                         onClick={() => deleteMessage(msg._id)}
                         className="text-xs text-red-600 hover:underline"
@@ -138,7 +123,7 @@ const Chatpage = () => {
             type="text"
             value={newMsg}
             onChange={(e) => setNewMsg(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             className="flex-1 border rounded px-4 py-2"
             placeholder="Type your message..."
           />

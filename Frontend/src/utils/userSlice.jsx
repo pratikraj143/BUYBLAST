@@ -31,15 +31,6 @@ const userSlice = createSlice({
             password: '',
             otp: Array(6).fill("")
         },
-        
-        // User Profile
-        profile: {
-            name: '',
-            email: '',
-            branch: '',
-            whatsapp: '',
-            profileImage: null
-        }
     },
     reducers: {
         // UI Actions

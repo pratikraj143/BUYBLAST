@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-    SetShowPassword, 
-    updateLoginForm, 
-    setToken, 
+import {
+    SetShowPassword,
+    updateLoginForm,
+    setToken,
     setAuthenticated,
     setUser,
-    resetLoginForm 
+    resetLoginForm,
+    setProfile // <-- imported
 } from '../utils/userSlice';
 import { hideLoginButton } from '../utils/headerSlice';
 import { setCurrentPage } from '../utils/appSlice';
@@ -41,13 +42,24 @@ function Login() {
             const data = await res.json();
             if (res.ok) {
                 alert('Login successful');
+                console.log("✅ Backend response user:", data.user);
+
                 dispatch(setToken(data.token));
                 dispatch(setAuthenticated(true));
-                // Set user data if available, otherwise create a basic user object
+
                 const userData = data.user || { email: loginForm.email };
                 dispatch(setUser(userData));
+
+                // 🟡 Update profile slice here
+                dispatch(setProfile({
+                    name: userData.name || '',
+                    email: userData.email || '',
+                    branch: userData.branch || '',
+                    whatsapp: userData.whatsappNumber || '',
+                }));
+
                 dispatch(resetLoginForm());
-                // Add a small delay to ensure Redux state is updated
+
                 setTimeout(() => {
                     navigate('/home');
                 }, 100);
@@ -105,7 +117,7 @@ function Login() {
                             />
                         </div>
 
-                        {/* Password Field with Toggle */}
+                        {/* Password Field */}
                         <div className="relative flex items-center mt-6 w-full bg-transparent border border-gray-300/60 h-12 rounded-full pl-6 pr-12 gap-2">
                             <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z" fill="#6B7280" />
