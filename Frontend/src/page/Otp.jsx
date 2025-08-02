@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateOtp, resetOtpData, resetRegisterForm } from '../utils/userSlice';
 import { setCurrentPage } from '../utils/appSlice';
 import { useNavigate } from 'react-router-dom';
+import Header from '../Component/Header';
 
 function Otp() {
     const inputRefs = useRef([]);
@@ -83,7 +84,9 @@ function Otp() {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
+        <>
+        <Header/>
+         <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
             <div className="flex flex-col items-center md:max-w-[423px] w-[380px] bg-white rounded-2xl shadow-2xl p-6 sm:p-10">
                 <p className="text-2xl font-semibold text-gray-900">Email Verify OTP</p>
                 <p className="mt-2 text-sm text-gray-900/90 text-center">
@@ -115,6 +118,8 @@ function Otp() {
                 </button>
             </div>
         </div>
+        </>
+       
     );
 }
 
