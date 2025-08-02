@@ -104,3 +104,45 @@ exports.login = async (req, res) => {
 
   res.json({ token, user: userData });
 };
+
+// Get user profile
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update user profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { whatsapp, profileImage, branch } = req.body;
+    const updateData = {};
+    
+    // Only update fields that are provided
+    if (whatsapp !== undefined) updateData.whatsapp = whatsapp;
+    if (profileImage !== undefined) updateData.profileImage = profileImage;
+    if (branch !== undefined) updateData.branch = branch;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateData },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

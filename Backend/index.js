@@ -1,157 +1,140 @@
-import React, { useEffect, useState, useRef } from "react";
-import io from "socket.io-client";
-import axios from "axios";
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
+const { Server } = require("socket.io");
+const Message = require("./models/Message");
 
-const socket = io("http://localhost:5000");
+dotenv.config();
 
-const Chatpage = () => {
-  const currentUser = "Ankush"; // 👈 Replace with logged-in user later
+const app = express();
+const server = http.createServer(app);
 
-  const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [replyingTo, setReplyingTo] = useState(null);
-  const bottomRef = useRef();
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "DELETE"],
+  },
+});
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/messages")
-      .then((res) => setMessages(res.data))
-      .catch((err) => console.log("Error fetching messages:", err));
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
 
-    socket.on("receive_message", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+connectDB();
 
-    socket.on("delete_message", (id) => {
-      setMessages((prev) => prev.filter((msg) => msg._id !== id));
-    });
+// Routes
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
+app.use("/api/product", require("./routes/productRoutes"));
 
-    return () => {
-      socket.off("receive_message");
-      socket.off("delete_message");
-    };
-  }, []);
+// API to get all messages
+app.get("/api/messages", async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ timestamp: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+// API to manually post messages (if needed)
+app.post("/api/messages", async (req, res) => {
+  try {
+    const newMessage = new Message(req.body);
+    const savedMessage = await newMessage.save();
+    res.status(201).json(savedMessage);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save message" });
+  }
+});
 
-  const sendMessage = () => {
-    if (!newMsg.trim()) return;
+// API to delete message (if within 1 hour)
+app.delete("/api/messages/:id", async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.id);
 
-    const messageData = {
-      text: newMsg,
-      sender: currentUser,
-      replyTo: replyingTo?._id || null,
-    };
-
-    socket.emit("send_message", messageData);
-
-    setNewMsg("");
-    setReplyingTo(null);
-  };
-
-  const deleteMessage = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/messages/${id}`, {
-        data: { sender: currentUser }, // ✅ Send current user for ownership check
-      });
-    } catch (err) {
-      console.log("Error deleting message:", err);
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
     }
-  };
 
-  const canDelete = (timestamp, sender) => {
     const oneHour = 60 * 60 * 1000;
-    const isOwner = sender === currentUser;
-    return isOwner && Date.now() - new Date(timestamp).getTime() <= oneHour;
-  };
+    const now = Date.now();
+    const messageTime = new Date(message.timestamp).getTime();
 
-  const getMessageById = (id) => messages.find((msg) => msg._id === id);
+    if (now - messageTime > oneHour) {
+      return res.status(403).json({ error: "Cannot delete message after 1 hour" });
+    }
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Real-Time Chat</h2>
+    await message.deleteOne();
+    io.emit("delete_message", req.params.id); // Notify all clients to delete
+    res.json({ message: "Message deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete message" });
+  }
+});
 
-        <div className="h-96 overflow-y-auto border p-4 rounded mb-4 bg-gray-50">
-          {messages.map((msg, index) => {
-            const repliedMessage = getMessageById(msg.replyTo);
-            return (
-              <div
-                key={msg._id || index}
-                className="mb-4 p-2 bg-white rounded shadow-sm"
-              >
-                {repliedMessage && (
-                  <div className="text-sm text-gray-500 border-l-4 border-indigo-500 pl-2 mb-1">
-                    Reply to <strong>{repliedMessage.sender}:</strong>{" "}
-                    {repliedMessage.text}
-                  </div>
-                )}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="font-semibold text-indigo-700">
-                      {msg.sender}:
-                    </span>{" "}
-                    {msg.text}
-                    <div className="text-xs text-gray-400">
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <button
-                      onClick={() => setReplyingTo(msg)}
-                      className="text-xs text-indigo-600 hover:underline"
-                    >
-                      Reply
-                    </button>
-                    {canDelete(msg.timestamp, msg.sender) && (
-                      <button
-                        onClick={() => deleteMessage(msg._id)}
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={bottomRef} />
-        </div>
+// Root API test
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
-        {replyingTo && (
-          <div className="mb-2 p-2 bg-indigo-50 border-l-4 border-indigo-600 text-sm">
-            Replying to <strong>{replyingTo.sender}</strong>: {replyingTo.text}
-            <button
-              onClick={() => setReplyingTo(null)}
-              className="ml-2 text-red-600 text-xs hover:underline"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
+// Socket.IO logic
+io.on("connection", (socket) => {
+  console.log("🟢 User connected:", socket.id);
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            className="flex-1 border rounded px-4 py-2"
-            placeholder="Type your message..."
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+  // Message events
+  socket.on("send_message", async (msg) => {
+    try {
+      const saved = await Message.create({
+        text: msg.text,
+        sender: msg.sender || "Anonymous",
+        replyTo: msg.replyTo || null,
+      });
+      io.emit("receive_message", saved); // Broadcast to all clients
+    } catch (err) {
+      console.error("❌ Error saving message:", err);
+    }
+  });
+  
+  // Product events
+  socket.on("new_product", (product) => {
+    console.log("📦 New product received via socket:", product.title);
+    io.emit("new_product", product); // Broadcast to all clients
+  });
+  
+  socket.on("update_product", (product) => {
+    console.log("🔄 Product update received via socket:", product._id);
+    io.emit("update_product", product); // Broadcast to all clients
+  });
+  
+  socket.on("delete_product", (productId) => {
+    console.log("🗑️ Product delete received via socket:", productId);
+    io.emit("delete_product", productId); // Broadcast to all clients
+  });
 
-export default Chatpage;
+  socket.on("delete_message", async (id) => {
+    try {
+      const message = await Message.findById(id);
+      if (!message) return;
+
+      const oneHour = 60 * 60 * 1000;
+      const now = Date.now();
+      const messageTime = new Date(message.timestamp).getTime();
+
+      if (now - messageTime > oneHour) return;
+
+      await message.deleteOne();
+      io.emit("delete_message", id); // Notify all clients
+    } catch (err) {
+      console.error("❌ Error deleting message:", err);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 User disconnected:", socket.id);
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

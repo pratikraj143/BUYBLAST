@@ -9,7 +9,8 @@ const userSlice = createSlice({
         // Authentication State
         isAuthenticated: !!localStorage.getItem('token'),
         token: localStorage.getItem('token') || null,
-        user: null,
+        user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
+        profile: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : {},
         
         // Form Data
         loginForm: {
@@ -52,12 +53,17 @@ const userSlice = createSlice({
         },
         setUser: (state, action) => {
             state.user = action.payload
+            if (action.payload) {
+                localStorage.setItem('user', JSON.stringify(action.payload))
+            }
         },
         logout: (state) => {
             state.isAuthenticated = false
             state.token = null
             state.user = null
+            state.profile = {}
             localStorage.removeItem('token')
+            localStorage.removeItem('user')
         },
         
         // Form Actions
@@ -99,9 +105,17 @@ const userSlice = createSlice({
         // Profile Actions
         setProfile: (state, action) => {
             state.profile = { ...state.profile, ...action.payload }
+            // Also update user object to keep them in sync
+            state.user = { ...state.user, ...action.payload }
+            // Save to localStorage for persistence
+            localStorage.setItem('user', JSON.stringify(state.user))
         },
         updateProfileImage: (state, action) => {
             state.profile.profileImage = action.payload
+            if (state.user) {
+                state.user.profileImage = action.payload
+                localStorage.setItem('user', JSON.stringify(state.user))
+            }
         }
     },
 })

@@ -1,17 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProductForm, resetProductForm, setUploadLoading, setUploadError, addMyProduct } from '../utils/productSlice';
 import { setCurrentPage } from '../utils/appSlice';
 import { useAuth } from '../utils/authUtils';
 import HomeHeader from '../Component/HomeHeader';
+import { io } from 'socket.io-client';
 
 function ListProductForm() {
   const dispatch = useDispatch();
   const { productForm, uploadLoading, uploadError } = useSelector(store => store.product);
   const { token } = useAuth();
+  // Initialize socket connection
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     dispatch(setCurrentPage('sell'));
+    
+    // Initialize socket connection
+    const newSocket = io('http://localhost:5000');
+    setSocket(newSocket);
+    
+    // Reset form when component unmounts
+    return () => {
+      dispatch(resetProductForm());
+      if (newSocket) newSocket.disconnect();
+    };
   }, [dispatch]);
 
   const handleImageChange = (e) => {
@@ -56,6 +69,12 @@ function ListProductForm() {
       if (res.ok) {
         alert('✅ Product uploaded successfully!');
         dispatch(addMyProduct(data.product));
+        
+        // Emit socket event for real-time update
+        if (socket) {
+          socket.emit('new_product', data.product);
+        }
+        
         dispatch(resetProductForm());
       } else {
         dispatch(setUploadError(data.error || data.message || 'Something went wrong.'));
@@ -77,12 +96,12 @@ function ListProductForm() {
       <HomeHeader />
       <form
         onSubmit={handleSubmit}
-        className="bg-white text-gray-700 my-4 w-full max-w-lg mx-auto p-4 rounded-lg border border-gray-300 space-y-4"
+        className="bg-white text-gray-700 my-2 sm:my-4 w-full max-w-lg mx-auto p-3 sm:p-4 rounded-lg border border-gray-300 space-y-3 sm:space-y-4"
       >
-        <h2 className="text-lg font-semibold text-gray-800">List Your Product</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800">List Your Product</h2>
 
         <div>
-          <label className="font-medium" htmlFor="title">Product Title</label>
+          <label className="font-medium text-sm sm:text-base" htmlFor="title">Product Title</label>
           <input 
             id="title" 
             type="text" 
@@ -90,12 +109,12 @@ function ListProductForm() {
             onChange={(e) => dispatch(updateProductForm({ title: e.target.value }))} 
             placeholder="Enter product title" 
             required 
-            className="w-full border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" 
+            className="w-full border mt-1 sm:mt-1.5 border-gray-300 outline-none rounded py-2 sm:py-2.5 px-3 text-sm sm:text-base" 
           />
         </div>
 
         <div>
-          <label className="font-medium" htmlFor="description">Description</label>
+          <label className="font-medium text-sm sm:text-base" htmlFor="description">Description</label>
           <textarea 
             id="description" 
             rows={4} 
@@ -103,18 +122,18 @@ function ListProductForm() {
             onChange={(e) => dispatch(updateProductForm({ description: e.target.value }))} 
             placeholder="Describe your product" 
             required 
-            className="w-full resize-none border mt-1.5 border-gray-300 outline-none rounded py-2.5 px-3" 
+            className="w-full resize-none border mt-1 sm:mt-1.5 border-gray-300 outline-none rounded py-2 sm:py-2.5 px-3 text-sm sm:text-base" 
           />
         </div>
 
         <div>
-          <label className="font-medium" htmlFor="category">Category</label>
+          <label className="font-medium text-sm sm:text-base" htmlFor="category">Category</label>
           <select 
             id="category" 
             value={productForm.category} 
             onChange={(e) => dispatch(updateProductForm({ category: e.target.value }))} 
             required 
-            className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3"
+            className="w-full mt-1 sm:mt-1.5 border border-gray-300 rounded py-2 sm:py-2.5 px-3 text-sm sm:text-base"
           >
             <option value="">Select category</option>
             <option value="electronics">Electronics</option>
@@ -127,13 +146,13 @@ function ListProductForm() {
         </div>
 
         <div>
-          <label className="font-medium" htmlFor="condition">Condition</label>
+          <label className="font-medium text-sm sm:text-base" htmlFor="condition">Condition</label>
           <select 
             id="condition" 
             value={productForm.condition} 
             onChange={(e) => dispatch(updateProductForm({ condition: e.target.value }))} 
             required 
-            className="w-full mt-1.5 border border-gray-300 rounded py-2.5 px-3"
+            className="w-full mt-1 sm:mt-1.5 border border-gray-300 rounded py-2 sm:py-2.5 px-3 text-sm sm:text-base"
           >
             <option value="">Select condition</option>
             <option value="new">New</option>
@@ -142,9 +161,9 @@ function ListProductForm() {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="font-medium" htmlFor="price">Price (₹)</label>
+            <label className="font-medium text-sm sm:text-base" htmlFor="price">Price (₹)</label>
             <input 
               id="price" 
               type="number" 
@@ -168,8 +187,8 @@ function ListProductForm() {
           </div>
         </div>
 
-        <label className="font-medium block mb-2" htmlFor="images">Upload Images</label>
-        <div className="border border-dashed border-gray-400 rounded-md p-4">
+        <label className="font-medium text-sm sm:text-base block mb-1 sm:mb-2" htmlFor="images">Upload Images</label>
+        <div className="border border-dashed border-gray-400 rounded-md p-3 sm:p-4">
           <input
             id="images"
             type="file"
@@ -180,12 +199,12 @@ function ListProductForm() {
             required
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">Upload up to 5 images (JPG/PNG)</p>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">Upload up to 5 images (JPG/PNG)</p>
 
         <button 
           type="submit" 
           disabled={uploadLoading}
-          className={`w-full font-medium py-2.5 rounded mt-4 ${
+          className={`w-full font-medium py-2 sm:py-2.5 rounded mt-3 sm:mt-4 text-sm sm:text-base ${
             uploadLoading 
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -195,7 +214,7 @@ function ListProductForm() {
         </button>
         
         {uploadError && (
-          <p className="text-red-500 text-sm mt-2">{uploadError}</p>
+          <p className="text-red-500 text-xs sm:text-sm mt-1 sm:mt-2">{uploadError}</p>
         )}
       </form>
     </div>

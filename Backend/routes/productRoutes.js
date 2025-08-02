@@ -12,7 +12,7 @@ const upload = multer({ storage });
 router.get("/all", async (req, res) => {
   console.log("GET /api/product/all hit");
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find().populate('user', 'name email').sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
     console.error("Failed to fetch products:", err.message);
@@ -76,12 +76,7 @@ router.post(
       await newProduct.save();
       console.log("📦 Product saved to DB");
 
-      // Emit real-time event
-      const io = req.app.get("io");
-      if (io) {
-        io.emit("receive_product", newProduct);
-        console.log("📡 Product emitted via Socket.io");
-      }
+      // No need to emit here as the client will emit the socket event
 
       res.status(201).json({
         message: "Product uploaded successfully",

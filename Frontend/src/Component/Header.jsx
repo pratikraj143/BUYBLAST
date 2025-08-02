@@ -3,18 +3,20 @@ import logoIMG from '../assets/logoIMG.png';
 import svg from '../assets/react.svg';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useAuth } from '../utils/authUtils';
 
 const Header = () => {
     const { showLogin, showSignup } = useSelector((state) => state.header);
+    const { isAuthenticated } = useAuth();
     return (
         <header className="flex items-center justify-between px-4 py-2 relative z-50">
-            <a href={svg} className="flex items-center">
+            <Link to={isAuthenticated ? "/home" : "/"} className="flex items-center">
                 <img
                     src={logoIMG}
                     alt="Logo"
                     className="w-22 h-22 rounded-full object-cover"
                 />
-            </a>
+            </Link>
             {/* Logo + Animated Title */}
             <div className="flex items-center gap-5 mt-3 animate-bounce">
                 {/* Replace this SVG with your actual logo or image if needed */}

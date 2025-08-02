@@ -9,6 +9,7 @@ const Chatpage = () => {
   const [newMsg, setNewMsg] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const bottomRef = useRef();
+  const currentUser = 'Ankush'; // Current logged-in user
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/messages')
@@ -38,7 +39,7 @@ const Chatpage = () => {
 
     const messageData = {
       text: newMsg,
-      sender: 'Ankush',
+      sender: currentUser,
       replyTo: replyingTo?._id || null,
     };
 
@@ -64,36 +65,61 @@ const Chatpage = () => {
   const getMessageById = (id) => messages.find(msg => msg._id === id);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Real-Time Chat</h2>
+    <div className="chat-dropdown-container flex flex-col h-full w-full">
+      <div className="bg-white rounded">
+        {replyingTo && (
+          <div className="bg-indigo-50 p-1.5 mb-2 rounded flex justify-between items-center">
+            <div className="text-xs">
+              <span className="font-medium">Replying to {replyingTo.sender}:</span> {replyingTo.text.substring(0, 30)}{replyingTo.text.length > 30 ? '...' : ''}
+            </div>
+            <button 
+              onClick={() => setReplyingTo(null)}
+              className="text-gray-500 hover:text-gray-700 text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
-        <div className="h-96 overflow-y-auto border p-4 rounded mb-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 max-h-[300px] sm:max-h-[400px] no-scrollbar">
           {messages.map((msg, index) => {
             const repliedMessage = getMessageById(msg.replyTo);
+            const isCurrentUser = msg.sender === currentUser;
+            
             return (
-              <div key={msg._id || index} className="mb-4 p-2 bg-white rounded shadow-sm">
-                {repliedMessage && (
-                  <div className="text-sm text-gray-500 border-l-4 border-indigo-500 pl-2 mb-1">
-                    Reply to <strong>{repliedMessage.sender}:</strong> {repliedMessage.text}
+              <div 
+                  key={msg._id || index} 
+                  className={`mb-2 ${isCurrentUser ? 'flex justify-end' : 'flex justify-start'}`}
+                >
+                  <div className={`p-1.5 sm:p-2 rounded-lg max-w-[85%] sm:max-w-[80%] shadow-sm ${isCurrentUser 
+                    ? 'bg-blue-100' 
+                    : 'bg-white border border-gray-100'}`}
+                  >
+                  {repliedMessage && (
+                    <div className="text-xs text-gray-500 border-l-2 border-indigo-500 pl-2 mb-1">
+                      Reply to <strong>{repliedMessage.sender}</strong>: {repliedMessage.text.substring(0, 30)}{repliedMessage.text.length > 30 ? '...' : ''}
+                    </div>
+                  )}
+                  
+                  <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} flex-col`}>
+                    <div className="flex items-start gap-1">
+                      {!isCurrentUser && <span className="font-semibold text-xs text-gray-700">{msg.sender}</span>}
+                      <span className="text-xs">{msg.text}</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-1">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                   </div>
-                )}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="font-semibold">{msg.sender}:</span> {msg.text}
-                    <div className="text-xs text-gray-400">{new Date(msg.timestamp).toLocaleTimeString()}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
+                  
+                  <div className="flex items-center gap-1 mt-1 justify-end">
                     <button
                       onClick={() => setReplyingTo(msg)}
-                      className="text-xs text-indigo-600 hover:underline"
+                      className="text-[10px] text-indigo-600 hover:underline"
                     >
                       Reply
                     </button>
                     {canDelete(msg.timestamp) && (
                       <button
                         onClick={() => deleteMessage(msg._id)}
-                        className="text-xs text-red-600 hover:underline"
+                        className="text-[10px] text-red-600 hover:underline ml-1"
                       >
                         Delete
                       </button>
@@ -106,30 +132,20 @@ const Chatpage = () => {
           <div ref={bottomRef} />
         </div>
 
-        {replyingTo && (
-          <div className="mb-2 p-2 bg-indigo-50 border-l-4 border-indigo-600 text-sm">
-            Replying to <strong>{replyingTo.sender}</strong>: {replyingTo.text}
-            <button
-              onClick={() => setReplyingTo(null)}
-              className="ml-2 text-red-600 text-xs hover:underline"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
 
-        <div className="flex gap-2">
+
+        <div className="flex gap-1 mt-2">
           <input
             type="text"
             value={newMsg}
             onChange={(e) => setNewMsg(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            className="flex-1 border rounded px-4 py-2"
             placeholder="Type your message..."
+            className="flex-1 p-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-indigo-300"
           />
           <button
             onClick={sendMessage}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            className="bg-indigo-600 text-white px-2 py-1 text-xs rounded hover:bg-indigo-700 transition"
           >
             Send
           </button>

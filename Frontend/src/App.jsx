@@ -40,6 +40,10 @@ const appRouter = createBrowserRouter([
         element: <Dummy />
       },
       {
+        path: 'dummy',
+        element: <Dummy />
+      },
+      {
         path: 'signup',
         element: <Register />
       },
@@ -52,12 +56,12 @@ const appRouter = createBrowserRouter([
         element: <Login />
       },
       {
-        path: 'chat',
-        element: <Chatpage />
+        path: 'feedback',
+        element: <ProtectedRoute><Feedback/></ProtectedRoute>
       },
       {
-        path: 'feedback',
-        element: <Feedback/>
+        path: 'chat',
+        element: <ProtectedRoute><Chatpage /></ProtectedRoute>
       },
       {
         path: 'profile',
