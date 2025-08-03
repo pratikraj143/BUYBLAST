@@ -3,9 +3,7 @@ import React from 'react';
 const Footer = () => {
   return (
     <footer className="flex flex-col items-center justify-center w-full py-5 bg-gradient-to-r from-slate-100 to-blue-100 text-gray-800">
-      
-      
-
+     
       {/* Tagline */}
       <p className="mt-3 text-center text-sm text-gray-600 mb-6 px-6">
         A marketplace for students, by students. Sell smart, buy smarter 💼📱📚

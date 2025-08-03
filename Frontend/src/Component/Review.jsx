@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 export default function Review() {
   return (
-    <div className=" max-w-8xl py-16 md:pl-24 md:w-full mx-2 md:mx-auto flex flex-col items-start justify-center text-left bg-gradient-to-b from-[#4C0083] to-[#180047] rounded-2xl p-10 text-white font-poppins">
+    <div className=" max-w-8xl py-16 md:pl-24 md:w-full mx-2 md:mx-auto flex flex-col items-start justify-center text-left bg-gradient-to-b from-[#d2daf1] to-[#180047] rounded-2xl p-10 text-white font-poppins">
       <div className=" flex items-center">
         <div className="flex -space-x-3 pr-3">
           <img
