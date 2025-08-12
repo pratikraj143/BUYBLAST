@@ -60,7 +60,7 @@ export const getAuthHeaders = () => {
 };
 
 // API helpers
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = 'https://buy-and-blast.onrender.com/api';
 
 // Test API connectivity
 export const testAPI = async () => {

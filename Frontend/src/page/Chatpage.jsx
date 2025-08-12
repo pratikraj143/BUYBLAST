@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io('http://localhost:5000');
+const socket = io('https://buy-and-blast.onrender.com');
 
 const Chatpage = () => {
   const [messages, setMessages] = useState([]);
@@ -12,7 +12,7 @@ const Chatpage = () => {
   const currentUser = 'Ankush'; // Current logged-in user
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/messages')
+    axios.get('https://buy-and-blast.onrender.com/api/messages')
       .then(res => setMessages(res.data))
       .catch(err => console.log('Error fetching messages:', err));
 
@@ -51,7 +51,7 @@ const Chatpage = () => {
 
   const deleteMessage = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/messages/${id}`);
+      await axios.delete(`https://buy-and-blast.onrender.com/api/messages/${id}`);
     } catch (err) {
       console.log('Error deleting message:', err);
     }

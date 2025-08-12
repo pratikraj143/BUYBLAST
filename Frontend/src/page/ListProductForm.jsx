@@ -15,7 +15,7 @@ function ListProductForm() {
 
   useEffect(() => {
     dispatch(setCurrentPage('sell'));
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io('https://buy-and-blast.onrender.com');
     setSocket(newSocket);
     return () => {
       dispatch(resetProductForm());
@@ -46,7 +46,7 @@ function ListProductForm() {
       formData.append('images', img);
     });
     try {
-      const res = await fetch('http://localhost:5000/api/product/upload', {
+      const res = await fetch('https://buy-and-blast.onrender.com/api/product/upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

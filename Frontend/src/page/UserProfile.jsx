@@ -30,7 +30,7 @@ const UserProfile = () => {
         const fetchUserProfile = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('http://localhost:5000/api/auth/profile', {
+                const response = await axios.get('https://buy-and-blast.onrender.com/api/auth/profile', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -87,7 +87,7 @@ const UserProfile = () => {
             
             console.log('Uploading image to server...');
             // Upload the image to the server
-            const response = await axios.post('http://localhost:5000/api/auth/upload-image', formData, {
+            const response = await axios.post('https://buy-and-blast.onrender.com/api/auth/upload-image', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`
@@ -126,7 +126,7 @@ const UserProfile = () => {
             setLoading(true);
             setError('');
             
-            const response = await axios.put('http://localhost:5000/api/auth/update-profile', {
+            const response = await axios.put('https://buy-and-blast.onrender.com/api/auth/update-profile', {
                 whatsapp: userData.whatsapp,
                 profileImage: userData.profileImage,
                 branch: userData.branch

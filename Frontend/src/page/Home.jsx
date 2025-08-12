@@ -14,7 +14,7 @@ import {
 import HomeHeader from "../Component/HomeHeader";
 
 // Initialize socket connection
-const socket = io("http://localhost:5000");
+const socket = io("https://buy-and-blast.onrender.com");
 
 function Home() {
   const dispatch = useDispatch();
@@ -26,7 +26,7 @@ function Home() {
     dispatch(setLoading(true));
 
     // Fetch initial products
-    fetch("http://localhost:5000/api/product/all", {
+    fetch("https://buy-and-blast.onrender.com/api/product/all", {
       signal: AbortSignal.timeout(5000),
     })
       .then((res) => {

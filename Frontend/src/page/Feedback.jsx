@@ -28,7 +28,7 @@ function Feedback() {
         }
 
         try {
-            const res = await fetch("http://localhost:5000/api/feedback/send", {
+            const res = await fetch("https://buy-and-blast.onrender.com/api/feedback/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, rating, like, improve })
