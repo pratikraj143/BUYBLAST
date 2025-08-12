@@ -83,7 +83,10 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
 
+<<<<<<< HEAD
   // Message events
+=======
+>>>>>>> d673dc5 (Update index.js)
   socket.on("send_message", async (msg) => {
     try {
       const saved = await Message.create({
@@ -96,6 +99,7 @@ io.on("connection", (socket) => {
       console.error("❌ Error saving message:", err);
     }
   });
+<<<<<<< HEAD
   
   // Product events
   socket.on("new_product", (product) => {
@@ -112,6 +116,8 @@ io.on("connection", (socket) => {
     console.log("🗑️ Product delete received via socket:", productId);
     io.emit("delete_product", productId); // Broadcast to all clients
   });
+=======
+>>>>>>> d673dc5 (Update index.js)
 
   socket.on("delete_message", async (id) => {
     try {
@@ -137,4 +143,8 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+<<<<<<< HEAD
 server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+=======
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+>>>>>>> d673dc5 (Update index.js)
