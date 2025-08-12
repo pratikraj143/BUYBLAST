@@ -43,7 +43,7 @@ function Register() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("https://buy-and-blast.onrender.com/api/auth/send-otp", {
+      const res = await fetch("http://:5000/api/auth/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
