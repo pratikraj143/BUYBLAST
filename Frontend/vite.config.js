@@ -1,17 +1,12 @@
-// vite.config.js
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react()],
-  build: {
-    rollupOptions: {
-      external: [
-        // Add the module name that's causing the warning here
-        'the-module-name',
-        // You can also use regex patterns if needed
-        /^some-package\/.*/,
-      ],
-    },
+  plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    open: true,
+    historyApiFallback: true, // for React Router support
   },
-})
+});
