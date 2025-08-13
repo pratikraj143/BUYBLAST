@@ -11,25 +11,29 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+// Frontend URL
 const FRONTEND_URL = "https://buy-blast.vercel.app";
 
+// Socket.IO setup with proper CORS
 const io = new Server(server, {
   cors: {
     origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"],
-    methods: ["GET", "POST", "DELETE"],
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     credentials: true,
   },
 });
 
+// Express CORS setup
 app.use(cors({
   origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"],
   methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  credentials: true,
 }));
 
 app.use(express.json({ limit: "10mb" }));
 
+// Connect to MongoDB
 connectDB();
 
 // Routes
@@ -47,7 +51,7 @@ app.get("/api/messages", async (req, res) => {
   }
 });
 
-// API to manually post messages (if needed)
+// API to manually post messages
 app.post("/api/messages", async (req, res) => {
   try {
     const newMessage = new Message(req.body);
@@ -76,7 +80,7 @@ app.delete("/api/messages/:id", async (req, res) => {
     }
 
     await message.deleteOne();
-    io.emit("delete_message", req.params.id); // Notify all clients to delete
+    io.emit("delete_message", req.params.id); // Notify all clients
     res.json({ message: "Message deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete message" });
@@ -92,10 +96,7 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
 
-<<<<<<< HEAD
   // Message events
-=======
->>>>>>> d673dc5 (Update index.js)
   socket.on("send_message", async (msg) => {
     try {
       const saved = await Message.create({
@@ -108,25 +109,22 @@ io.on("connection", (socket) => {
       console.error("❌ Error saving message:", err);
     }
   });
-<<<<<<< HEAD
-  
+
   // Product events
   socket.on("new_product", (product) => {
     console.log("📦 New product received via socket:", product.title);
     io.emit("new_product", product); // Broadcast to all clients
   });
-  
+
   socket.on("update_product", (product) => {
     console.log("🔄 Product update received via socket:", product._id);
     io.emit("update_product", product); // Broadcast to all clients
   });
-  
+
   socket.on("delete_product", (productId) => {
     console.log("🗑️ Product delete received via socket:", productId);
     io.emit("delete_product", productId); // Broadcast to all clients
   });
-=======
->>>>>>> d673dc5 (Update index.js)
 
   socket.on("delete_message", async (id) => {
     try {
@@ -152,8 +150,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-<<<<<<< HEAD
 server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-=======
-server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
->>>>>>> d673dc5 (Update index.js)
