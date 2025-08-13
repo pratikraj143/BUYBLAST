@@ -11,14 +11,23 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+const FRONTEND_URL = "https://buy-blast.vercel.app";
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST", "DELETE"],
+    credentials: true,
   },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"],
+  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
 app.use(express.json({ limit: "10mb" }));
 
 connectDB();
